@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html ng-app="App">
   <head>
-    <title>MailHog</title>
+    <title>My SMTP Proxy</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,7 +19,7 @@
         <div class="col-md-2 col-sm-3">
           <div class="navbar-header">
             <a class="navbar-brand" href="#">
-              <img src="images/hog.png" height="20" alt="MailHog"> My Own Mailhog
+              My SMTP Proxy
             </a>
           </div>
         </div>
@@ -47,8 +47,9 @@
 
           <ul class="nav navbar-nav navbar-right">
             <li>
-              <a target="_blank" href="https://github.com/mailhog/MailHog">
-                <img src="images/github.png" height="16" alt="GitHub"> GitHub
+              <a href="#" title="Event stream connected" ng-click="toggleStream()">
+                <span class="glyphicon glyphicon-off {{ hasEventSource ? 'has-event-source' : 'no-event-source' }}"></span>
+                {{ hasEventSource ? 'Connected' : 'Disconnected' }}
               </a>
             </li>
           </ul>
@@ -60,13 +61,6 @@
       <div class="row">
         <div class="col-md-2 col-sm-3">
           <ul class="nav nav-pills nav-stacked">
-            <li>
-              <a href="#" title="Event stream connected" ng-click="toggleStream()">
-                <span class="glyphicon glyphicon-off {{ hasEventSource ? 'has-event-source' : 'no-event-source' }}"></span>
-                {{ hasEventSource ? 'Connected' : 'Disconnected' }}
-              </a>
-            </li>
-
             <li>
               <a href="#" ng-click="backToInboxFirst()">
                 Inbox ({{totalMessages}})
