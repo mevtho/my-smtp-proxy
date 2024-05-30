@@ -12,6 +12,8 @@ import (
 
 	"my-smtp-proxy/data"
 	"my-smtp-proxy/storage"
+
+	"github.com/joho/godotenv"
 )
 
 // DefaultConfig is the default config
@@ -23,6 +25,8 @@ func DefaultConfig() *Config {
 		MongoURI:     "127.0.0.1:27017",
 		MongoDb:      "mailhog",
 		MongoColl:    "messages",
+		SqliteFile:   ":memory:",
+		SqliteTable:  "messages",
 		MaildirPath:  "",
 		StorageType:  "memory",
 		CORSOrigin:   "",
@@ -40,6 +44,8 @@ type Config struct {
 	MongoURI         string
 	MongoDb          string
 	MongoColl        string
+	SqliteFile       string
+	SqliteTable      string
 	StorageType      string
 	CORSOrigin       string
 	MaildirPath      string
@@ -86,6 +92,16 @@ func Configure() *Config {
 			log.Println("Connected to MongoDB")
 			cfg.Storage = s
 		}
+	case "sqlite":
+		log.Println("Using SQLite message storage")
+		s := storage.CreateSqlite(cfg.SqliteFile, cfg.SqliteTable)
+		if s == nil {
+			log.Println("Sqlite storage unavailable, reverting to in-memory storage")
+			cfg.Storage = storage.CreateInMemory()
+		} else {
+			log.Println("Connected to Sqlite")
+			cfg.Storage = s
+		}
 	case "maildir":
 		log.Println("Using maildir message storage")
 		s := storage.CreateMaildir(cfg.MaildirPath)
@@ -119,6 +135,8 @@ func Configure() *Config {
 
 // RegisterFlags registers flags
 func RegisterFlags() {
+	godotenv.Load()
+
 	flag.StringVar(&cfg.SMTPBindAddr, "smtp-bind-addr", envconf.FromEnvP("MH_SMTP_BIND_ADDR", "0.0.0.0:1025").(string), "SMTP bind interface and port, e.g. 0.0.0.0:1025 or just :1025")
 	flag.StringVar(&cfg.APIBindAddr, "api-bind-addr", envconf.FromEnvP("MH_API_BIND_ADDR", "0.0.0.0:8025").(string), "HTTP bind interface and port for API, e.g. 0.0.0.0:8025 or just :8025")
 	flag.StringVar(&cfg.Hostname, "hostname", envconf.FromEnvP("MH_HOSTNAME", "mailhog.example").(string), "Hostname for EHLO/HELO response, e.g. mailhog.example")
@@ -126,9 +144,23 @@ func RegisterFlags() {
 	flag.StringVar(&cfg.MongoURI, "mongo-uri", envconf.FromEnvP("MH_MONGO_URI", "127.0.0.1:27017").(string), "MongoDB URI, e.g. 127.0.0.1:27017")
 	flag.StringVar(&cfg.MongoDb, "mongo-db", envconf.FromEnvP("MH_MONGO_DB", "mailhog").(string), "MongoDB database, e.g. mailhog")
 	flag.StringVar(&cfg.MongoColl, "mongo-coll", envconf.FromEnvP("MH_MONGO_COLLECTION", "messages").(string), "MongoDB collection, e.g. messages")
+	flag.StringVar(&cfg.SqliteFile, "sqlite-file", envconf.FromEnvP("MH_SQLITE_FILE", ":memory:").(string), "Sqlite File")
+	flag.StringVar(&cfg.SqliteTable, "sqlite-table", envconf.FromEnvP("MH_SQLITE_TABLE", "messages").(string), "Sqlite Table")
 	flag.StringVar(&cfg.CORSOrigin, "cors-origin", envconf.FromEnvP("MH_CORS_ORIGIN", "").(string), "CORS Access-Control-Allow-Origin header for API endpoints")
 	flag.StringVar(&cfg.MaildirPath, "maildir-path", envconf.FromEnvP("MH_MAILDIR_PATH", "").(string), "Maildir path (if storage type is 'maildir')")
 	flag.BoolVar(&cfg.InviteJim, "invite-jim", envconf.FromEnvP("MH_INVITE_JIM", false).(bool), "Decide whether to invite Jim (beware, he causes trouble)")
 	flag.StringVar(&cfg.OutgoingSMTPFile, "outgoing-smtp", envconf.FromEnvP("MH_OUTGOING_SMTP", "").(string), "JSON file containing outgoing SMTP servers")
-	Jim.RegisterFlags()
+
+	// flag.StringVar(&cfg.SMTPBindAddr, "smtp-bind-addr", envconf.FromEnvP("MH_SMTP_BIND_ADDR", "0.0.0.0:1025").(string), "SMTP bind interface and port, e.g. 0.0.0.0:1025 or just :1025")
+	// flag.StringVar(&cfg.APIBindAddr, "api-bind-addr", envconf.FromEnvP("MH_API_BIND_ADDR", "0.0.0.0:8025").(string), "HTTP bind interface and port for API, e.g. 0.0.0.0:8025 or just :8025")
+	// flag.StringVar(&cfg.Hostname, "hostname", envconf.FromEnvP("MH_HOSTNAME", "mailhog.example").(string), "Hostname for EHLO/HELO response, e.g. mailhog.example")
+	// flag.StringVar(&cfg.StorageType, "storage", envconf.FromEnvP("MH_STORAGE", "memory").(string), "Message storage: 'memory' (default), 'mongodb' or 'maildir'")
+	// flag.StringVar(&cfg.MongoURI, "mongo-uri", envconf.FromEnvP("MH_MONGO_URI", "127.0.0.1:27017").(string), "MongoDB URI, e.g. 127.0.0.1:27017")
+	// flag.StringVar(&cfg.MongoDb, "mongo-db", envconf.FromEnvP("MH_MONGO_DB", "mailhog").(string), "MongoDB database, e.g. mailhog")
+	// flag.StringVar(&cfg.MongoColl, "mongo-coll", envconf.FromEnvP("MH_MONGO_COLLECTION", "messages").(string), "MongoDB collection, e.g. messages")
+	// flag.StringVar(&cfg.CORSOrigin, "cors-origin", envconf.FromEnvP("MH_CORS_ORIGIN", "").(string), "CORS Access-Control-Allow-Origin header for API endpoints")
+	// flag.StringVar(&cfg.MaildirPath, "maildir-path", envconf.FromEnvP("MH_MAILDIR_PATH", "").(string), "Maildir path (if storage type is 'maildir')")
+	// flag.BoolVar(&cfg.InviteJim, "invite-jim", envconf.FromEnvP("MH_INVITE_JIM", false).(bool), "Decide whether to invite Jim (beware, he causes trouble)")
+	// flag.StringVar(&cfg.OutgoingSMTPFile, "outgoing-smtp", envconf.FromEnvP("MH_OUTGOING_SMTP", "").(string), "JSON file containing outgoing SMTP servers")
+	// Jim.RegisterFlags()
 }
