@@ -1,6 +1,6 @@
-var mailhogApp = angular.module('mailhogApp', []);
+var App = angular.module('App', []);
 
-mailhogApp.directive('targetBlank', function(){
+App.directive('targetBlank', function(){
   return {
     link : function(scope, element, attributes){
       element.on('load', function() {
@@ -21,7 +21,7 @@ function guid() {
          s4() + '-' + s4() + s4() + s4();
 }
 
-mailhogApp.directive('ngKeyEnter', function () {
+App.directive('ngKeyEnter', function () {
   return function (scope, element, attrs) {
     element.bind("keydown keypress", function (event) {
       if(event.which === 13) {
@@ -34,7 +34,7 @@ mailhogApp.directive('ngKeyEnter', function () {
   };
 });
 
-mailhogApp.controller('MailCtrl', function ($scope, $http, $sce, $timeout) {
+App.controller('MailCtrl', function ($scope, $http, $sce, $timeout) {
   $scope.host = apiHost;
 
   $scope.cache = {};
